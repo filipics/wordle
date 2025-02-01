@@ -17,6 +17,13 @@ app.get("*", (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
+
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+});
+
+// Evitar que el proceso termine
+process.on("SIGTERM", () => {
+    console.log("🚨 Servidor detenido por Railway.");
+    process.exit(0);
 });
