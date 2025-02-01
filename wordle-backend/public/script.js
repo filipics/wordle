@@ -24,12 +24,12 @@ async function fetchWord() {
     }
 }
 
-// 📌 Cambiar la cantidad de letras y reiniciar el juego
+// 📌 Cambiar la cantidad de letras y reiniciar el juego correctamente
 function setWordLength() {
     const newLength = parseInt(document.getElementById("word-length").value);
     if (!isNaN(newLength) && newLength >= 3 && newLength <= 10) {
         wordLength = newLength;
-        resetGame();
+        resetGame(); // 📌 Ahora sí reinicia el juego y genera las celdas
     } else {
         showMessage("⚠️ Selecciona un número entre 3 y 10.");
     }
@@ -73,7 +73,7 @@ function generateKeyboard() {
             key.classList.add("key");
             key.textContent = letter;
             key.id = `key-${letter}`;
-            key.dataset.status = "default";
+            key.dataset.status = "default"; // 📌 Nuevo atributo para manejar estados
             key.addEventListener("click", () => handleKeyPress(letter));
             rowDiv.appendChild(key);
         });
@@ -169,7 +169,7 @@ async function validateWord(word) {
 function processWord(inputWord) {
     let gridCells = document.querySelectorAll(".cell");
     let letterCount = {};
-
+    
     for (let i = 0; i < wordLength; i++) {
         letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
     }
@@ -181,15 +181,21 @@ function processWord(inputWord) {
 
         if (letter === targetWord[i]) {
             cell.classList.add("correct");
+            key.classList.remove("present", "absent");
             key.classList.add("correct");
             letterCount[letter]--;
         } else if (targetWord.includes(letter) && letterCount[letter] > 0) {
             cell.classList.add("present");
-            key.classList.add("present");
+            if (!key.classList.contains("correct")) {
+                key.classList.remove("absent");
+                key.classList.add("present");
+            }
             letterCount[letter]--;
         } else {
-            key.classList.add("absent");
-            cell.classList.add("absent");
+            if (!key.classList.contains("correct") && !key.classList.contains("present")) {
+                cell.classList.add("absent");
+                key.classList.add("absent");
+            }
         }
     }
 
