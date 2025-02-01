@@ -144,50 +144,61 @@ function handleKeyPress(key) {
 function checkWord() {
     let inputWord = "";
     let gridCells = document.querySelectorAll(".cell");
-    let letterCount = {}; // Para rastrear la cantidad de letras en la palabra objetivo
+    let letterCount = {}; // Contador de letras en la palabra objetivo
 
+    // 📌 Crear un conteo de letras en la palabra objetivo
     for (let i = 0; i < wordLength; i++) {
         inputWord += gridCells[currentRow * wordLength + i].textContent.toLowerCase();
         letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
     }
 
-    // Verificar aciertos y actualizar teclado
+    // 📌 Primera pasada: marcar letras correctas (verde) y actualizar contador
     for (let i = 0; i < wordLength; i++) {
         let cell = gridCells[currentRow * wordLength + i];
         let letter = inputWord[i];
         let key = document.getElementById(`key-${letter}`);
 
-        if (letter === targetWord[i]) {
+        if (letter === targetWord[i]) {  // 📌 Coincidencia exacta (verde)
             cell.classList.add("correct");
             key.classList.remove("present", "absent");
             key.classList.add("correct");
-            letterCount[letter]--;
+            letterCount[letter]--; // Reducimos el conteo porque ya se usó esta letra
         }
     }
 
-    // Verificar letras presentes y ausentes
+    // 📌 Segunda pasada: marcar letras presentes (amarillo) sin afectar los verdes
     for (let i = 0; i < wordLength; i++) {
         let cell = gridCells[currentRow * wordLength + i];
         let letter = inputWord[i];
         let key = document.getElementById(`key-${letter}`);
 
-        if (!cell.classList.contains("correct")) {
-            if (targetWord.includes(letter) && letterCount[letter] > 0) {
+        if (!cell.classList.contains("correct")) {  // 📌 Solo revisamos letras NO verdes
+            if (letterCount[letter] > 0) { // 📌 Si la letra está en la palabra (pero en otra posición)
                 cell.classList.add("present");
-                if (!key.classList.contains("correct")) {
+                if (!key.classList.contains("correct")) { // 📌 No cambiar si ya es verde
                     key.classList.add("present");
                 }
-                letterCount[letter]--;
-            } else {
-                if (!key.classList.contains("correct") && !key.classList.contains("present")) {
-                    cell.classList.add("absent");
-                    key.classList.add("absent");
-                }
+                letterCount[letter]--; // Reducimos la cantidad de veces que puede aparecer
             }
         }
     }
 
-    // Verificar si el usuario ganó
+    // 📌 Tercera pasada: marcar letras ausentes (gris) correctamente
+    for (let i = 0; i < wordLength; i++) {
+        let cell = gridCells[currentRow * wordLength + i];
+        let letter = inputWord[i];
+        let key = document.getElementById(`key-${letter}`);
+
+        if (!cell.classList.contains("correct") && !cell.classList.contains("present")) {  
+            // 📌 Solo marcamos en gris si no fue verde ni amarillo
+            cell.classList.add("absent");
+            if (!key.classList.contains("correct") && !key.classList.contains("present")) { 
+                key.classList.add("absent");
+            }
+        }
+    }
+
+    // 📌 Verificar si el usuario ganó
     if (inputWord === targetWord) {
         document.getElementById("message").textContent = "🎉 ¡Ganaste!";
     } else if (currentRow === maxAttempts - 1) {
