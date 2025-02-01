@@ -9,7 +9,7 @@ const usedWords = new Set(); // Para evitar palabras repetidas en una sesión
 // 📌 Obtener palabra desde el backend en Railway
 async function fetchWord() {
     try {
-        const response = await fetch("https://wordle-production-1581.up.railway.app/api/generate-word", {
+        const response = await fetch("https://cheerful-joy-production.up.railway.app/api/generate-word", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
