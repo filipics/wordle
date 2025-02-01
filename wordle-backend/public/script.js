@@ -11,9 +11,7 @@ async function fetchWord() {
     try {
         const response = await fetch("https://cheerful-joy-production.up.railway.app/api/generate-word", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ length: wordLength })
         });
 
@@ -32,12 +30,6 @@ async function fetchWord() {
         console.error("Error obteniendo la palabra del servidor:", error);
         targetWord = "perro"; // Palabra de respaldo en caso de error
     }
-}
-
-// 📌 Cambiar la longitud de la palabra según la selección del usuario
-function setWordLength() {
-    wordLength = parseInt(document.getElementById("word-length").value);
-    resetGame();
 }
 
 // 📌 Reiniciar el juego
@@ -105,13 +97,6 @@ function generateKeyboard() {
     keyboard.appendChild(lastRow);
 }
 
-// 📌 Reiniciar estilos del teclado
-function resetKeyboardStyles() {
-    document.querySelectorAll(".key").forEach(key => {
-        key.classList.remove("correct", "present", "absent");
-    });
-}
-
 // 📌 Manejar entrada del teclado
 document.addEventListener("keydown", function(event) {
     handleKeyPress(event.key);
@@ -157,7 +142,7 @@ async function checkWord() {
         return;
     }
 
-    // 📌 Si la palabra es válida, continuar con la lógica del juego
+    // 📌 Si la palabra es válida, continuar con la lógica normal
     processWord(inputWord);
 }
 
@@ -178,13 +163,65 @@ async function validateWord(word) {
     }
 }
 
-// 📌 Mostrar mensajes al usuario
-function showMessage(text) {
-    const messageElement = document.getElementById("message");
-    messageElement.textContent = text;
-    setTimeout(() => {
-        messageElement.textContent = "";
-    }, 2000);
+// 📌 Procesar la palabra correctamente después de validarla
+function processWord(inputWord) {
+    let gridCells = document.querySelectorAll(".cell");
+    let letterCount = {};
+
+    for (let i = 0; i < wordLength; i++) {
+        letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
+    }
+
+    for (let i = 0; i < wordLength; i++) {
+        let cell = gridCells[currentRow * wordLength + i];
+        let letter = inputWord[i];
+        let key = document.getElementById(`key-${letter}`);
+
+        if (letter === targetWord[i]) {
+            cell.classList.add("correct");
+            key.classList.remove("present", "absent");
+            key.classList.add("correct");
+            letterCount[letter]--;
+        }
+    }
+
+    for (let i = 0; i < wordLength; i++) {
+        let cell = gridCells[currentRow * wordLength + i];
+        let letter = inputWord[i];
+        let key = document.getElementById(`key-${letter}`);
+
+        if (!cell.classList.contains("correct")) {
+            if (letterCount[letter] > 0) {
+                cell.classList.add("present");
+                if (!key.classList.contains("correct")) {
+                    key.classList.add("present");
+                }
+                letterCount[letter]--;
+            }
+        }
+    }
+
+    for (let i = 0; i < wordLength; i++) {
+        let cell = gridCells[currentRow * wordLength + i];
+        let letter = inputWord[i];
+        let key = document.getElementById(`key-${letter}`);
+
+        if (!cell.classList.contains("correct") && !cell.classList.contains("present")) {
+            cell.classList.add("absent");
+            if (!key.classList.contains("correct") && !key.classList.contains("present")) {
+                key.classList.add("absent");
+            }
+        }
+    }
+
+    if (inputWord === targetWord) {
+        showMessage("🎉 ¡Ganaste!");
+    } else if (currentRow === maxAttempts - 1) {
+        document.getElementById("reveal-word").textContent = `La palabra era: ${targetWord.toUpperCase()}`;
+    }
+
+    currentRow++;
+    currentCol = 0;
 }
 
 // 📌 Inicializar juego
