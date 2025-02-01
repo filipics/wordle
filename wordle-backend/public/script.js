@@ -17,18 +17,22 @@ async function fetchWord() {
 
         const data = await response.json();
         targetWord = data.word.toLowerCase();
-
-        // Evitar palabras repetidas
-        if (usedWords.has(targetWord)) {
-            console.log("Palabra repetida, generando otra...");
-            return fetchWord();
-        }
-        usedWords.add(targetWord);
-        console.log(`🎯 Palabra seleccionada: ${targetWord}`);
+        console.log(`🎯 Nueva palabra: ${targetWord}`);
 
     } catch (error) {
         console.error("Error obteniendo la palabra del servidor:", error);
         targetWord = "perro"; // Palabra de respaldo en caso de error
+    }
+}
+
+// 📌 Cambiar la cantidad de letras y reiniciar el juego
+function setWordLength() {
+    const newLength = parseInt(document.getElementById("word-length").value);
+    if (!isNaN(newLength) && newLength >= 3 && newLength <= 10) {
+        wordLength = newLength;
+        resetGame();  // 📌 Ahora realmente reinicia el juego
+    } else {
+        showMessage("⚠️ Selecciona un número entre 3 y 10.");
     }
 }
 
@@ -71,6 +75,7 @@ function generateKeyboard() {
             key.classList.add("key");
             key.textContent = letter;
             key.id = `key-${letter}`;
+            key.dataset.status = "default";  // 📌 Nuevo atributo para evitar errores de color
             key.addEventListener("click", () => handleKeyPress(letter));
             rowDiv.appendChild(key);
         });
@@ -135,7 +140,6 @@ async function checkWord() {
         inputWord += gridCells[currentRow * wordLength + i].textContent.toLowerCase();
     }
 
-    // 📌 Validar si la palabra está en la RAE con ChatGPT
     const isValid = await validateWord(inputWord);
 
     if (!isValid) {
@@ -143,7 +147,6 @@ async function checkWord() {
         return;
     }
 
-    // 📌 Si la palabra es válida, continuar con la lógica normal
     processWord(inputWord);
 }
 
@@ -164,10 +167,11 @@ async function validateWord(word) {
     }
 }
 
-// 📌 Procesar la palabra correctamente después de validarla
+// 📌 Procesar la palabra y actualizar colores correctamente
 function processWord(inputWord) {
     let gridCells = document.querySelectorAll(".cell");
     let letterCount = {};
+    let keyboard = {};
 
     for (let i = 0; i < wordLength; i++) {
         letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
@@ -180,7 +184,7 @@ function processWord(inputWord) {
 
         if (letter === targetWord[i]) {
             cell.classList.add("correct");
-            key.classList.add("correct");
+            key.dataset.status = "correct";
             letterCount[letter]--;
         }
     }
@@ -193,11 +197,15 @@ function processWord(inputWord) {
         if (!cell.classList.contains("correct")) {
             if (letterCount[letter] > 0) {
                 cell.classList.add("present");
-                key.classList.add("present");
+                if (key.dataset.status !== "correct") {
+                    key.dataset.status = "present";
+                }
                 letterCount[letter]--;
             } else {
-                cell.classList.add("absent");
-                key.classList.add("absent");
+                if (!key.dataset.status.includes("correct") && !key.dataset.status.includes("present")) {
+                    cell.classList.add("absent");
+                    key.dataset.status = "absent";
+                }
             }
         }
     }
