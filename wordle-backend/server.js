@@ -14,24 +14,39 @@ app.use(express.static(path.join(__dirname, "public")));
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
-// 📌 Función para verificar si una palabra existe en la RAE
-async function validateWordRAE(word) {
+// 📌 Validar palabra con ChatGPT preguntando si está en la RAE
+async function validateWordChatGPT(word) {
     try {
-        const response = await axios.get(`https://dle.rae.es/srv/search?w=${word}`);
+        const response = await axios.post(
+            "https://api.openai.com/v1/chat/completions",
+            {
+                model: "gpt-4",
+                messages: [
+                    { role: "system", content: "Eres un experto en el diccionario de la Real Academia Española (RAE). Responde únicamente con 'Sí' o 'No'." },
+                    { role: "user", content: `¿La palabra "${word}" está en el diccionario de la RAE? Responde solo con 'Sí' o 'No'.` }
+                ],
+                max_tokens: 10,
+                temperature: 0
+            },
+            {
+                headers: {
+                    "Authorization": `Bearer ${OPENAI_API_KEY}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
 
-        // 📌 Verificar si la respuesta contiene resultados válidos
-        if (response.data.includes("resultados") || response.data.includes("RAE")) {
-            return true; // ✅ La palabra existe en la RAE
-        } else {
-            return false; // ❌ La palabra no está en la RAE
-        }
+        const responseText = response.data.choices[0].message.content.trim();
+        console.log(`📌 ChatGPT respondió: ${responseText}`);
+        return responseText.toLowerCase() === "sí"; // 📌 Convertimos la respuesta en booleano
+
     } catch (error) {
-        console.error("❌ Error consultando la RAE:", error.message);
-        return false; // ❌ No se pudo verificar
+        console.error("❌ Error consultando ChatGPT:", error.message);
+        return false; // ❌ Si falla, asumimos que la palabra no es válida
     }
 }
 
-// 📌 Nueva ruta para validar la palabra del usuario
+// 📌 Nueva ruta para validar la palabra con ChatGPT
 app.post("/api/validate-word", async (req, res) => {
     const { word } = req.body;
 
@@ -39,7 +54,7 @@ app.post("/api/validate-word", async (req, res) => {
         return res.status(400).json({ valid: false, error: "Palabra inválida" });
     }
 
-    const isValid = await validateWordRAE(word);
+    const isValid = await validateWordChatGPT(word);
 
     if (isValid) {
         res.json({ valid: true });
@@ -47,7 +62,6 @@ app.post("/api/validate-word", async (req, res) => {
         res.json({ valid: false, error: "La palabra no está en la RAE" });
     }
 });
-
 
 // 📌 Ruta para obtener una palabra
 app.post("/api/generate-word", async (req, res) => {

@@ -140,19 +140,16 @@ function handleKeyPress(key) {
     currentCol++;
 }
 
-// 📌 Validar la palabra ingresada
+// 📌 Validar la palabra ingresada antes de continuar
 async function checkWord() {
     let inputWord = "";
     let gridCells = document.querySelectorAll(".cell");
-    let letterCount = {}; // Contador de letras en la palabra objetivo
 
-    // 📌 Crear un conteo de letras en la palabra objetivo
     for (let i = 0; i < wordLength; i++) {
         inputWord += gridCells[currentRow * wordLength + i].textContent.toLowerCase();
-        letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
     }
 
-    // 📌 Validar si la palabra está en la RAE antes de continuar
+    // 📌 Validar si la palabra está en la RAE con ChatGPT
     const isValid = await validateWord(inputWord);
 
     if (!isValid) {
@@ -160,66 +157,14 @@ async function checkWord() {
         return;
     }
 
-    // 📌 Primera pasada: marcar letras correctas (verde) y actualizar contador
-    for (let i = 0; i < wordLength; i++) {
-        let cell = gridCells[currentRow * wordLength + i];
-        let letter = inputWord[i];
-        let key = document.getElementById(`key-${letter}`);
-
-        if (letter === targetWord[i]) {  // 📌 Coincidencia exacta (verde)
-            cell.classList.add("correct");
-            key.classList.remove("present", "absent");
-            key.classList.add("correct");
-            letterCount[letter]--; // Reducimos el conteo porque ya se usó esta letra
-        }
-    }
-
-    // 📌 Segunda pasada: marcar letras presentes (amarillo) sin afectar los verdes
-    for (let i = 0; i < wordLength; i++) {
-        let cell = gridCells[currentRow * wordLength + i];
-        let letter = inputWord[i];
-        let key = document.getElementById(`key-${letter}`);
-
-        if (!cell.classList.contains("correct")) {  // 📌 Solo revisamos letras NO verdes
-            if (letterCount[letter] > 0) { // 📌 Si la letra está en la palabra (pero en otra posición)
-                cell.classList.add("present");
-                if (!key.classList.contains("correct")) { // 📌 No cambiar si ya es verde
-                    key.classList.add("present");
-                }
-                letterCount[letter]--; // Reducimos la cantidad de veces que puede aparecer
-            }
-        }
-    }
-
-    // 📌 Tercera pasada: marcar letras ausentes (gris) correctamente
-    for (let i = 0; i < wordLength; i++) {
-        let cell = gridCells[currentRow * wordLength + i];
-        let letter = inputWord[i];
-        let key = document.getElementById(`key-${letter}`);
-
-        if (!cell.classList.contains("correct") && !cell.classList.contains("present")) {  
-            // 📌 Solo marcamos en gris si no fue verde ni amarillo
-            cell.classList.add("absent");
-            if (!key.classList.contains("correct") && !key.classList.contains("present")) { 
-                key.classList.add("absent");
-            }
-        }
-    }
-
-    // 📌 Verificar si el usuario ganó
-    if (inputWord === targetWord) {
-        document.getElementById("message").textContent = "🎉 ¡Ganaste!";
-    } else if (currentRow === maxAttempts - 1) {
-        document.getElementById("reveal-word").textContent = `La palabra era: ${targetWord.toUpperCase()}`;
-    }
-
-    currentRow++;
-    currentCol = 0;
+    // 📌 Si la palabra es válida, continuar con la lógica del juego
+    processWord(inputWord);
 }
 
+// 📌 Función para validar la palabra en el backend
 async function validateWord(word) {
     try {
-        const response = await fetch("https://wordle-production-1581.up.railway.app/api/validate-word", {
+        const response = await fetch("https://cheerful-joy-production.up.railway.app/api/validate-word", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ word })
@@ -234,16 +179,6 @@ async function validateWord(word) {
 }
 
 // 📌 Mostrar mensajes al usuario
-function showMessage(text) {
-    const messageElement = document.getElementById("message");
-    messageElement.textContent = text;
-    setTimeout(() => {
-        messageElement.textContent = "";
-    }, 2000);
-}
-
-
-// 📌 Mostrar mensajes temporales
 function showMessage(text) {
     const messageElement = document.getElementById("message");
     messageElement.textContent = text;
