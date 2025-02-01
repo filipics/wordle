@@ -75,13 +75,13 @@ app.post("/api/generate-word", async (req, res) => {
         const response = await axios.post(
             "https://api.openai.com/v1/chat/completions",
             {
-                model: "gpt-4",
+                model: "gpt-4o",
                 messages: [
                     { role: "system", content: "Eres un generador de palabras en español." },
-                    { role: "user", content: `Genera una palabra en español con exactamente ${length} letras, sin caracteres especiales ni acentos.` }
+                    { role: "user", content: `Genera una palabra aleatoria en español con exactamente ${length} letras, sin caracteres especiales ni tildes` }
                 ],
-                max_tokens: 10,
-                temperature: 0.7
+                max_tokens: 30,
+                temperature: 0.3
             },
             {
                 headers: {
