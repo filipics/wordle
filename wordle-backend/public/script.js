@@ -1,17 +1,17 @@
+let wordLength = 5;
 let targetWord = "";
 let currentRow = 0;
 let currentCol = 0;
-const wordLength = 5; // 📌 Longitud fija de 5 letras
 const maxAttempts = 6;
 const allowedLetters = "qwertyuiopasdfghjklñzxcvbnm";
 
-// 📌 Obtener palabra de 5 letras desde el backend en Railway
+// 📌 Obtener palabra desde el backend en Railway
 async function fetchWord() {
     try {
         const response = await fetch("https://cheerful-joy-production.up.railway.app/api/generate-word", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ length: wordLength }) // 📌 Se mantiene fijo en 5 letras
+            body: JSON.stringify({ length: wordLength })
         });
 
         const data = await response.json();
@@ -24,17 +24,28 @@ async function fetchWord() {
     }
 }
 
+// 📌 Cambiar la cantidad de letras y reiniciar el juego correctamente
+function setWordLength() {
+    const newLength = parseInt(document.getElementById("word-length").value);
+    if (!isNaN(newLength) && newLength >= 3 && newLength <= 10) {
+        wordLength = newLength;
+        resetGame(); // 📌 Ahora sí reinicia el juego y genera las celdas
+    } else {
+        showMessage("⚠️ Selecciona un número entre 3 y 10.");
+    }
+}
+
 // 📌 Reiniciar el juego correctamente
 function resetGame() {
     currentRow = 0;
     currentCol = 0;
     document.getElementById("grid").innerHTML = "";
-    document.getElementById("keyboard").innerHTML = ""; // 📌 Se reinicia el teclado
     document.getElementById("message").textContent = "";
     document.getElementById("reveal-word").textContent = "";
+    resetKeyboardStyles();
     generateGrid();
     generateKeyboard();
-    fetchWord(); // 📌 Se obtiene una nueva palabra
+    fetchWord();
 }
 
 // 📌 Generar el tablero de juego
@@ -42,7 +53,6 @@ function generateGrid() {
     const grid = document.getElementById("grid");
     grid.style.gridTemplateColumns = `repeat(${wordLength}, 60px)`;
     grid.innerHTML = "";
-
     for (let i = 0; i < maxAttempts * wordLength; i++) {
         const cell = document.createElement("div");
         cell.classList.add("cell");
@@ -63,7 +73,7 @@ function generateKeyboard() {
             key.classList.add("key");
             key.textContent = letter;
             key.id = `key-${letter}`;
-            key.dataset.status = "default";
+            key.dataset.status = "default"; // 📌 Nuevo atributo para manejar estados
             key.addEventListener("click", () => handleKeyPress(letter));
             rowDiv.appendChild(key);
         });
@@ -89,6 +99,14 @@ function generateKeyboard() {
     lastRow.appendChild(backspaceKey);
     lastRow.appendChild(enterKey);
     keyboard.appendChild(lastRow);
+}
+
+// 📌 Resetear colores del teclado
+function resetKeyboardStyles() {
+    document.querySelectorAll(".key").forEach(key => {
+        key.classList.remove("correct", "present", "absent");
+        key.dataset.status = "default";
+    });
 }
 
 // 📌 Manejar entrada del teclado
