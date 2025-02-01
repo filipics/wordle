@@ -77,8 +77,8 @@ app.post("/api/generate-word", async (req, res) => {
             {
                 model: "gpt-4o",
                 messages: [
-                    { role: "system", content: "Eres un generador de palabras en español." },
-                    { role: "user", content: `Genera una palabra aleatoria en español con exactamente ${length} letras, sin caracteres especiales ni tildes` }
+                    { role: "system", content: "Eres un experto en el diccionario de la Real Academia Española (RAE)." },
+                    { role: "user", content: `Responde este mensaje solo con una palabra en español de ${length} letras, sin caracteres especiales ni tildes. Solo esa palabra y ninguna otra palabra mas.` }
                 ],
                 max_tokens: 30,
                 temperature: 0.3
