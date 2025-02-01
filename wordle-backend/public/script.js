@@ -1,10 +1,9 @@
-let wordLength = 5;  // Longitud por defecto
+let wordLength = 5;
 let targetWord = "";
 let currentRow = 0;
 let currentCol = 0;
 const maxAttempts = 6;
 const allowedLetters = "qwertyuiopasdfghjklñzxcvbnm";
-const usedWords = new Set(); // Para evitar palabras repetidas en una sesión
 
 // 📌 Obtener palabra desde el backend en Railway
 async function fetchWord() {
@@ -30,7 +29,7 @@ function setWordLength() {
     const newLength = parseInt(document.getElementById("word-length").value);
     if (!isNaN(newLength) && newLength >= 3 && newLength <= 10) {
         wordLength = newLength;
-        resetGame();  // 📌 Ahora realmente reinicia el juego
+        resetGame();
     } else {
         showMessage("⚠️ Selecciona un número entre 3 y 10.");
     }
@@ -40,7 +39,6 @@ function setWordLength() {
 function resetGame() {
     currentRow = 0;
     currentCol = 0;
-    usedWords.clear();
     document.getElementById("grid").innerHTML = "";
     document.getElementById("message").textContent = "";
     document.getElementById("reveal-word").textContent = "";
@@ -75,7 +73,7 @@ function generateKeyboard() {
             key.classList.add("key");
             key.textContent = letter;
             key.id = `key-${letter}`;
-            key.dataset.status = "default";  // 📌 Nuevo atributo para evitar errores de color
+            key.dataset.status = "default";
             key.addEventListener("click", () => handleKeyPress(letter));
             rowDiv.appendChild(key);
         });
@@ -143,7 +141,7 @@ async function checkWord() {
     const isValid = await validateWord(inputWord);
 
     if (!isValid) {
-        showMessage("❌ Esa palabra no está en la RAE.");
+        showMessage("❌ Esa palabra no está en la DRAE.");
         return;
     }
 
@@ -167,11 +165,10 @@ async function validateWord(word) {
     }
 }
 
-// 📌 Procesar la palabra y actualizar colores correctamente
+// 📌 Procesar la palabra correctamente
 function processWord(inputWord) {
     let gridCells = document.querySelectorAll(".cell");
     let letterCount = {};
-    let keyboard = {};
 
     for (let i = 0; i < wordLength; i++) {
         letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
@@ -184,29 +181,15 @@ function processWord(inputWord) {
 
         if (letter === targetWord[i]) {
             cell.classList.add("correct");
-            key.dataset.status = "correct";
+            key.classList.add("correct");
             letterCount[letter]--;
-        }
-    }
-
-    for (let i = 0; i < wordLength; i++) {
-        let cell = gridCells[currentRow * wordLength + i];
-        let letter = inputWord[i];
-        let key = document.getElementById(`key-${letter}`);
-
-        if (!cell.classList.contains("correct")) {
-            if (letterCount[letter] > 0) {
-                cell.classList.add("present");
-                if (key.dataset.status !== "correct") {
-                    key.dataset.status = "present";
-                }
-                letterCount[letter]--;
-            } else {
-                if (!key.dataset.status.includes("correct") && !key.dataset.status.includes("present")) {
-                    cell.classList.add("absent");
-                    key.dataset.status = "absent";
-                }
-            }
+        } else if (targetWord.includes(letter) && letterCount[letter] > 0) {
+            cell.classList.add("present");
+            key.classList.add("present");
+            letterCount[letter]--;
+        } else {
+            key.classList.add("absent");
+            cell.classList.add("absent");
         }
     }
 
@@ -218,6 +201,15 @@ function processWord(inputWord) {
 
     currentRow++;
     currentCol = 0;
+}
+
+// 📌 Mostrar mensajes al usuario
+function showMessage(text) {
+    const messageElement = document.getElementById("message");
+    messageElement.textContent = text;
+    setTimeout(() => {
+        messageElement.textContent = "";
+    }, 2000);
 }
 
 // 📌 Inicializar juego
