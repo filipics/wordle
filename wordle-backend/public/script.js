@@ -32,22 +32,11 @@ async function fetchWord() {
     }
 }
 
-// 📌 Cambiar la longitud de la palabra según la selección del usuario
-function setWordLength() {
-    const newLength = parseInt(document.getElementById("word-length").value);
-    if (!isNaN(newLength) && newLength >= 3 && newLength <= 10) {
-        wordLength = newLength;
-        resetGame();
-    } else {
-        showMessage("⚠️ Selecciona un número entre 3 y 10.");
-    }
-}
-
 // 📌 Reiniciar el juego correctamente
 function resetGame() {
     currentRow = 0;
     currentCol = 0;
-    usedWords.clear();  // Resetear las palabras usadas
+    usedWords.clear();
     document.getElementById("grid").innerHTML = "";
     document.getElementById("message").textContent = "";
     document.getElementById("reveal-word").textContent = "";
@@ -175,33 +164,52 @@ async function validateWord(word) {
     }
 }
 
-// 📌 Mostrar mensaje de "¡Ganaste!"
-function showWinMessage() {
-    document.getElementById("message").textContent = "🎉 ¡Ganaste!";
-}
-
-// 📌 Mostrar mensajes temporales
-function showMessage(text) {
-    const messageElement = document.getElementById("message");
-    messageElement.textContent = text;
-    setTimeout(() => {
-        messageElement.textContent = "";
-    }, 2000);
-}
-
 // 📌 Procesar la palabra correctamente después de validarla
 function processWord(inputWord) {
+    let gridCells = document.querySelectorAll(".cell");
+    let letterCount = {};
+
+    for (let i = 0; i < wordLength; i++) {
+        letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
+    }
+
+    for (let i = 0; i < wordLength; i++) {
+        let cell = gridCells[currentRow * wordLength + i];
+        let letter = inputWord[i];
+        let key = document.getElementById(`key-${letter}`);
+
+        if (letter === targetWord[i]) {
+            cell.classList.add("correct");
+            key.classList.add("correct");
+            letterCount[letter]--;
+        }
+    }
+
+    for (let i = 0; i < wordLength; i++) {
+        let cell = gridCells[currentRow * wordLength + i];
+        let letter = inputWord[i];
+        let key = document.getElementById(`key-${letter}`);
+
+        if (!cell.classList.contains("correct")) {
+            if (letterCount[letter] > 0) {
+                cell.classList.add("present");
+                key.classList.add("present");
+                letterCount[letter]--;
+            } else {
+                cell.classList.add("absent");
+                key.classList.add("absent");
+            }
+        }
+    }
+
     if (inputWord === targetWord) {
-        showWinMessage(); // 📌 Mostrar mensaje de victoria
-        return;
+        showMessage("🎉 ¡Ganaste!");
+    } else if (currentRow === maxAttempts - 1) {
+        document.getElementById("reveal-word").textContent = `La palabra era: ${targetWord.toUpperCase()}`;
     }
 
     currentRow++;
     currentCol = 0;
-
-    if (currentRow === maxAttempts) {
-        document.getElementById("reveal-word").textContent = `La palabra era: ${targetWord.toUpperCase()}`;
-    }
 }
 
 // 📌 Inicializar juego
