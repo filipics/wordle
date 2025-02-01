@@ -35,17 +35,18 @@ function setWordLength() {
     }
 }
 
-// 📌 Reiniciar el juego correctamente
-function resetGame() {
+async function resetGame() {
     currentRow = 0;
     currentCol = 0;
     document.getElementById("grid").innerHTML = "";
+    document.getElementById("keyboard").innerHTML = "";
     document.getElementById("message").textContent = "";
     document.getElementById("reveal-word").textContent = "";
-    resetKeyboardStyles();
+
     generateGrid();
     generateKeyboard();
-    fetchWord();
+
+    await fetchWord(); // 📌 Esperar a que se obtenga la nueva palabra antes de permitir la escritura
 }
 
 // 📌 Generar el tablero de juego
