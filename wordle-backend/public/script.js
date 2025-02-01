@@ -1,12 +1,12 @@
-let wordLength = 5;
+let wordLength = 5;  // Longitud por defecto
 let targetWord = "";
 let currentRow = 0;
 let currentCol = 0;
 const maxAttempts = 6;
 const allowedLetters = "qwertyuiopasdfghjklñzxcvbnm";
-const diacritics = /[áéíóúü]/;
-const usedWords = new Set(); // Keep track of words used in a session
+const usedWords = new Set(); // Para evitar palabras repetidas en una sesión
 
+// 📌 Obtener palabra desde el backend en Railway
 async function fetchWord() {
     try {
         const response = await fetch("https://wordle-production-1581.up.railway.app/api/generate-word", {
@@ -14,25 +14,33 @@ async function fetchWord() {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ length: wordLength }) // Enviar la longitud de la palabra
+            body: JSON.stringify({ length: wordLength })
         });
 
         const data = await response.json();
         targetWord = data.word.toLowerCase();
-        console.log(`Palabra seleccionada: ${targetWord}`);
+
+        // Evitar palabras repetidas
+        if (usedWords.has(targetWord)) {
+            console.log("Palabra repetida, generando otra...");
+            return fetchWord();
+        }
+        usedWords.add(targetWord);
+        console.log(`🎯 Palabra seleccionada: ${targetWord}`);
+
     } catch (error) {
         console.error("Error obteniendo la palabra del servidor:", error);
         targetWord = "perro"; // Palabra de respaldo en caso de error
     }
 }
 
-
-
+// 📌 Cambiar la longitud de la palabra según la selección del usuario
 function setWordLength() {
     wordLength = parseInt(document.getElementById("word-length").value);
     resetGame();
 }
 
+// 📌 Reiniciar el juego
 function resetGame() {
     currentRow = 0;
     currentCol = 0;
@@ -45,6 +53,7 @@ function resetGame() {
     fetchWord();
 }
 
+// 📌 Generar el tablero de juego
 function generateGrid() {
     const grid = document.getElementById("grid");
     grid.style.gridTemplateColumns = `repeat(${wordLength}, 60px)`;
@@ -52,12 +61,11 @@ function generateGrid() {
     for (let i = 0; i < maxAttempts * wordLength; i++) {
         const cell = document.createElement("div");
         cell.classList.add("cell");
-        cell.dataset.index = i;
         grid.appendChild(cell);
     }
-    updateSelectedCell();
 }
 
+// 📌 Generar el teclado en pantalla
 function generateKeyboard() {
     const keyboard = document.getElementById("keyboard");
     keyboard.innerHTML = "";
@@ -76,6 +84,7 @@ function generateKeyboard() {
         keyboard.appendChild(rowDiv);
     });
 
+    // Añadir teclas de "Enter" y "Backspace"
     const lastRow = document.createElement("div");
     lastRow.classList.add("keyboard-row");
 
@@ -84,7 +93,7 @@ function generateKeyboard() {
     enterKey.textContent = "Enter";
     enterKey.style.width = "80px";
     enterKey.addEventListener("click", () => handleKeyPress("Enter"));
-    
+
     const backspaceKey = document.createElement("div");
     backspaceKey.classList.add("key", "key-backspace");
     backspaceKey.textContent = "←";
@@ -96,20 +105,14 @@ function generateKeyboard() {
     keyboard.appendChild(lastRow);
 }
 
+// 📌 Reiniciar estilos del teclado
 function resetKeyboardStyles() {
     document.querySelectorAll(".key").forEach(key => {
         key.classList.remove("correct", "present", "absent");
     });
 }
 
-function updateSelectedCell() {
-    document.querySelectorAll(".cell").forEach(cell => cell.classList.remove("selected"));
-    if (currentCol < wordLength) {
-        const index = currentRow * wordLength + currentCol;
-        document.querySelectorAll(".cell")[index].classList.add("selected");
-    }
-}
-
+// 📌 Manejar entrada del teclado
 document.addEventListener("keydown", function(event) {
     handleKeyPress(event.key);
 });
@@ -126,21 +129,19 @@ function handleKeyPress(key) {
     }
     if (key === "backspace" && currentCol > 0) {
         currentCol--;
-        const index = currentRow * wordLength + currentCol;
-        document.querySelectorAll(".cell")[index].textContent = "";
-        updateSelectedCell();
+        const cells = document.querySelectorAll(".cell");
+        cells[currentRow * wordLength + currentCol].textContent = "";
         return;
     }
     if (!allowedLetters.includes(key) || currentCol >= wordLength) return;
 
-    const index = currentRow * wordLength + currentCol;
-    document.querySelectorAll(".cell")[index].textContent = key.toUpperCase();
+    const cells = document.querySelectorAll(".cell");
+    cells[currentRow * wordLength + currentCol].textContent = key.toUpperCase();
     currentCol++;
-    updateSelectedCell();
 }
 
+// 📌 Validar la palabra ingresada
 function checkWord() {
-    console.log("checkWord() ejecutado");
     let inputWord = "";
     let gridCells = document.querySelectorAll(".cell");
     let letterCount = {}; // Para rastrear la cantidad de letras en la palabra objetivo
@@ -149,9 +150,8 @@ function checkWord() {
         inputWord += gridCells[currentRow * wordLength + i].textContent.toLowerCase();
         letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
     }
-    console.log("Palabra ingresada:", inputWord);
-    
-    // Primera pasada: marcar letras correctas (verde)
+
+    // Verificar aciertos y actualizar teclado
     for (let i = 0; i < wordLength; i++) {
         let cell = gridCells[currentRow * wordLength + i];
         let letter = inputWord[i];
@@ -159,22 +159,22 @@ function checkWord() {
 
         if (letter === targetWord[i]) {
             cell.classList.add("correct");
-            key.classList.remove("present", "absent"); // Quitar otros colores si estaban antes
-            key.classList.add("correct"); // Marcar verde en el teclado
-            letterCount[letter]--; // Reducir el contador de letras disponibles
+            key.classList.remove("present", "absent");
+            key.classList.add("correct");
+            letterCount[letter]--;
         }
     }
-    
-    // Segunda pasada: marcar letras presentes (amarillo) o ausentes (gris)
+
+    // Verificar letras presentes y ausentes
     for (let i = 0; i < wordLength; i++) {
         let cell = gridCells[currentRow * wordLength + i];
         let letter = inputWord[i];
         let key = document.getElementById(`key-${letter}`);
 
-        if (!cell.classList.contains("correct")) { // Si no es verde
+        if (!cell.classList.contains("correct")) {
             if (targetWord.includes(letter) && letterCount[letter] > 0) {
                 cell.classList.add("present");
-                if (!key.classList.contains("correct")) { // Solo actualizar si no es verde
+                if (!key.classList.contains("correct")) {
                     key.classList.add("present");
                 }
                 letterCount[letter]--;
@@ -193,23 +193,21 @@ function checkWord() {
     } else if (currentRow === maxAttempts - 1) {
         document.getElementById("reveal-word").textContent = `La palabra era: ${targetWord.toUpperCase()}`;
     }
-    
+
     currentRow++;
     currentCol = 0;
-    updateSelectedCell();
 }
 
-
+// 📌 Mostrar mensajes temporales
 function showMessage(text) {
     const messageElement = document.getElementById("message");
     messageElement.textContent = text;
-    messageElement.style.opacity = "1";
     setTimeout(() => {
-        messageElement.style.opacity = "0";
+        messageElement.textContent = "";
     }, 2000);
 }
 
-// Initial setup
+// 📌 Inicializar juego
 fetchWord();
 generateGrid();
 generateKeyboard();

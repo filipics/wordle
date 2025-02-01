@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordle Clon</title>
+    <title>Wordle con ChatGPT</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>Wordle Clon</h1>
-    </header>
-    <main>
-        <label for="word-length">Elige la longitud de la palabra:</label>
-        <select id="word-length" onchange="setWordLength()">
-            <option value="5">5 letras</option>
-            <option value="6">6 letras</option>
-            <option value="7">7 letras</option>
-        </select>
-        <div id="grid"></div>
-        <p id="message"></p>
-        <p id="reveal-word"></p>
-        <div id="keyboard"></div>
-    </main>
+    <h1>Wordle con ChatGPT</h1>
+
+    <label for="word-length">Selecciona la longitud de la palabra:</label>
+    <select id="word-length" onchange="setWordLength()">
+        <option value="4">4 letras</option>
+        <option value="5" selected>5 letras</option>
+        <option value="6">6 letras</option>
+        <option value="7">7 letras</option>
+    </select>
+
+    <p id="message"></p>
+    <div id="grid"></div>
+    <div id="keyboard"></div>
+    <button onclick="resetGame()">Reiniciar Juego</button>
+    <p id="reveal-word"></p>
+
     <script src="script.js"></script>
 </body>
 </html>
