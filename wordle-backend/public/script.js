@@ -9,7 +9,7 @@ const usedWords = new Set(); // Keep track of words used in a session
 
 async function fetchWord() {
     try {
-        const response = await fetch("http://localhost:3000/api/generate-word", {
+        const response = await fetch("https://wordle-production-1581.up.railway.app/api/generate-word", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -18,13 +18,14 @@ async function fetchWord() {
         });
 
         const data = await response.json();
-        targetWord = data.word.toLowerCase(); // Guardar la palabra generada
+        targetWord = data.word.toLowerCase();
         console.log(`Palabra seleccionada: ${targetWord}`);
     } catch (error) {
         console.error("Error obteniendo la palabra del servidor:", error);
         targetWord = "perro"; // Palabra de respaldo en caso de error
     }
 }
+
 
 
 function setWordLength() {
