@@ -13,6 +13,37 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+
+// 📌 Función para verificar si una palabra existe en la RAE
+async function validateWordRAE(word) {
+    try {
+        const response = await axios.get(`https://dle.rae.es/srv/search?w=${word}`);
+        return response.data.includes("resultados");  // 📌 Si hay resultados, la palabra existe
+    } catch (error) {
+        console.error("❌ Error consultando la RAE:", error.message);
+        return false;
+    }
+}
+
+// 📌 Nueva ruta para validar la palabra del usuario
+app.post("/api/validate-word", async (req, res) => {
+    const { word } = req.body;
+
+    if (!word || word.length < 3) {
+        return res.status(400).json({ valid: false, error: "Palabra inválida" });
+    }
+
+    const isValid = await validateWordRAE(word);
+
+    if (isValid) {
+        res.json({ valid: true });
+    } else {
+        res.json({ valid: false, error: "La palabra no está en la RAE" });
+    }
+});
+
+
+
 // 📌 Ruta para obtener una palabra
 app.post("/api/generate-word", async (req, res) => {
     const { length } = req.body;

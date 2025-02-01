@@ -141,7 +141,7 @@ function handleKeyPress(key) {
 }
 
 // 📌 Validar la palabra ingresada
-function checkWord() {
+async function checkWord() {
     let inputWord = "";
     let gridCells = document.querySelectorAll(".cell");
     let letterCount = {}; // Contador de letras en la palabra objetivo
@@ -150,6 +150,14 @@ function checkWord() {
     for (let i = 0; i < wordLength; i++) {
         inputWord += gridCells[currentRow * wordLength + i].textContent.toLowerCase();
         letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
+    }
+
+    // 📌 Validar si la palabra está en la RAE antes de continuar
+    const isValid = await validateWord(inputWord);
+
+    if (!isValid) {
+        showMessage("❌ Esa palabra no está en la RAE.");
+        return;
     }
 
     // 📌 Primera pasada: marcar letras correctas (verde) y actualizar contador
@@ -208,6 +216,32 @@ function checkWord() {
     currentRow++;
     currentCol = 0;
 }
+
+async function validateWord(word) {
+    try {
+        const response = await fetch("https://wordle-production-1581.up.railway.app/api/validate-word", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ word })
+        });
+
+        const data = await response.json();
+        return data.valid;
+    } catch (error) {
+        console.error("❌ Error validando la palabra:", error);
+        return false;
+    }
+}
+
+// 📌 Mostrar mensajes al usuario
+function showMessage(text) {
+    const messageElement = document.getElementById("message");
+    messageElement.textContent = text;
+    setTimeout(() => {
+        messageElement.textContent = "";
+    }, 2000);
+}
+
 
 // 📌 Mostrar mensajes temporales
 function showMessage(text) {
