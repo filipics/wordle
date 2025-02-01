@@ -101,6 +101,14 @@ function generateKeyboard() {
     keyboard.appendChild(lastRow);
 }
 
+// 📌 Resetear colores del teclado
+function resetKeyboardStyles() {
+    document.querySelectorAll(".key").forEach(key => {
+        key.classList.remove("correct", "present", "absent");
+        key.dataset.status = "default";
+    });
+}
+
 // 📌 Manejar entrada del teclado
 document.addEventListener("keydown", function(event) {
     handleKeyPress(event.key);
@@ -169,7 +177,7 @@ async function validateWord(word) {
 function processWord(inputWord) {
     let gridCells = document.querySelectorAll(".cell");
     let letterCount = {};
-    
+
     for (let i = 0; i < wordLength; i++) {
         letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
     }
