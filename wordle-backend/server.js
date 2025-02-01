@@ -18,10 +18,16 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 async function validateWordRAE(word) {
     try {
         const response = await axios.get(`https://dle.rae.es/srv/search?w=${word}`);
-        return response.data.includes("resultados");  // 📌 Si hay resultados, la palabra existe
+
+        // 📌 Verificar si la respuesta contiene resultados válidos
+        if (response.data.includes("resultados") || response.data.includes("RAE")) {
+            return true; // ✅ La palabra existe en la RAE
+        } else {
+            return false; // ❌ La palabra no está en la RAE
+        }
     } catch (error) {
         console.error("❌ Error consultando la RAE:", error.message);
-        return false;
+        return false; // ❌ No se pudo verificar
     }
 }
 
@@ -41,7 +47,6 @@ app.post("/api/validate-word", async (req, res) => {
         res.json({ valid: false, error: "La palabra no está en la RAE" });
     }
 });
-
 
 
 // 📌 Ruta para obtener una palabra
